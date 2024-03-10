@@ -1,0 +1,62 @@
+rule all:
+	input:
+
+rule make_tag_dir:
+	input:
+	output:
+	params:
+	conda:
+		'envs/homer_env.yml'
+	shell:
+
+rule findPeaks:
+	input:
+	output:
+	conda:
+		'envs/homer_env.yml'
+	shell:
+
+rule convertPeakFiles:
+	input:
+	output:
+	conda:
+		'envs/homer_env.yml'
+	shell:
+
+rule intersect_peaks:
+	input:
+	output:
+	conda:
+		'envs/bedtools_env.yml'
+	shell:
+
+rule filter_blacklist:
+	input:
+	output:
+	conda:
+		'envs/bedtools_env.yml'
+	shell:
+
+rule unzip_gtf:
+	input:
+	output:
+	shell:
+
+rule annotate_peaks:
+	input:
+	output:
+	conda:
+		'envs/homer_env.yml'
+	shell:
+
+rule unzip_genome:
+	input:
+	output:
+	shell:
+
+rule motifs:
+	input:
+	output:
+	conda:
+		'envs/homer_env.yml'
+	shell:

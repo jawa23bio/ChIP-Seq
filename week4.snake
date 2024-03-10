@@ -1,0 +1,18 @@
+rule all:
+	input:
+
+rule computeMatrix:
+	input:
+	output:
+	params:
+	conda:
+		'envs/deeptools_env.yml'
+	threads: 4
+	shell:
+
+rule plotMatrix:
+	input:
+	output:
+	conda:
+		'envs/deeptools_env.yml'
+	shell:

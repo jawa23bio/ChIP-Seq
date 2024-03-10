@@ -1,0 +1,15 @@
+---
+title: "Week2.Rmd"
+output: html_document
+date: '2024-03-01'
+---
+
+Use this notebook to quickly write the methods for the week:
+
+
+
+
+
+
+If asked, you may also include any plots or figures in this notebook as well:
+

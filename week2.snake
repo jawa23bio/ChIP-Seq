@@ -1,0 +1,56 @@
+rule all:
+	input:
+
+rule bowtie2_align:
+	input:
+	output:
+	threads: 16
+	params:
+	conda:
+		'envs/bowtie2_env.yml'
+	shell:
+
+rule samtools_sort:
+	input:
+	output:
+	conda:
+		'envs/samtools_env.yml'
+	shell:
+
+rule samtools_idx:
+	input:
+	output:
+	conda:
+		'envs/samtools_env.yml'
+	shell:
+
+rule multiqc:
+	input:
+	output:
+	params:
+	conda:
+		'envs/multiqc_env.yml'
+	shell:
+
+rule bamCoverage:
+	input:
+	output:
+	threads: 4
+	conda:
+		'envs/deeptools_env.yml'
+	shell:
+
+rule multiBwSummary:
+	input:
+	output:
+	conda:
+		'envs/deeptools_env.yml'
+	shell:
+
+rule plotCorrelation:
+	input:
+	output:
+	params:
+	conda:
+		'envs/deeptools_env.yml'
+	shell:
