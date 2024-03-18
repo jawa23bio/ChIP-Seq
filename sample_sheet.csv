@@ -1,5 +1,5 @@
 name,srr,ftp_link,condition,replicate,orig_srr
-INPsubsample_rep1,SRR2919474subsample,https://zenodo.org/records/10601901/files/SRR2919474subsample.fastq.gz,INPsubsample,rep1,SRR2919474
-RUNX1subsample_rep1,SRR2919475subsample,https://zenodo.org/records/10601901/files/SRR2919475subsample.fastq.gz,RUNX1subsample,rep1,SRR2919475
-INPsubsample_rep2,SRR2919476subsample,https://zenodo.org/records/10601901/files/SRR2919476subsample.fastq.gz,INPsubsample,rep2,SRR2919476
-RUNX1subsample_rep2,SRR2919477subsample,https://zenodo.org/records/10601901/files/SRR2919477subsample.fastq.gz,RUNX1subsample,rep2,SRR2919477
+INP_rep1,SRR2919474,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR291/004/SRR2919474/SRR2919474.fastq.gz,INP,rep1,SRR2919474
+RUNX1_rep1,SRR2919475,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR291/005/SRR2919475/SRR2919475.fastq.gz,RUNX1,rep1,SRR2919475
+INP_rep2,SRR2919476,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR291/006/SRR2919476/SRR2919476.fastq.gz,INP,rep2,SRR2919476
+RUNX1_rep2,SRR2919477,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR291/007/SRR2919477/SRR2919477.fastq.gz,RUNX1,rep2,SRR2919477

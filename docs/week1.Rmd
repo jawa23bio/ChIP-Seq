@@ -6,10 +6,42 @@ date: '2024-03-01'
 
 Use this notebook to quickly write the methods for the week:
 
+**1. Data Accession**
 
+**1.1 Sample Data Information**
 
+Raw sequencing data samples were obtained from an external source using FTP links provided in a sample sheet. The sample sheet contained metadata such as experimental conditions, replicate information, SRR number and FTP links to download each fastq file of the samples.
 
+**1.2 Downloading Raw Data**
 
+To automate the download process, a Snakemake rule named `wget_files` was implemented. This rule utilized the `wget` command-line tool to fetch the raw FASTQ files specified by the FTP links. Each downloaded file was renamed according to the experimental condition and replicate information using the `renamed` parameter.
 
-If asked, you may also include any plots or figures in this notebook as well:
+**2. Quality Control and Preprocessing**
+
+**2.1 Quality Assessment with FastQC**
+
+For quality assessment of the raw sequencing data, the `fastqc` rule was implemented. This rule utilized the FastQC tool to generate quality reports for each raw FASTQ file.
+
+**2.2 Adapter Trimming with Trimmomatic**
+
+The `trimmomatic` rule was designed for adapter trimming and quality filtering of the raw sequencing data. Trimmomatic was configured to remove adapter sequences and low-quality bases from the input FASTQ files using the following parameters: SE, ILLUMINACLIP:{input.adapters}:2:30:10, LEADING:3, TRAILING:3 and SLIDINGWINDOW:4:15
+
+- _SE_: This parameter specifies that the input data is single-end (SE) sequencing data.
+
+- _ILLUMINACLIP_:{input.adapters}:2:30:10: This parameter specifies adapter trimming using the Illumina adapter clipping method. It instructs Trimmomatic to remove adapter sequences from the reads. The value {input.adapters} represents the path to the adapter file, which contains sequences of known adapter contaminants. The numbers 2:30:10 denote the following:
+2: Indicates the seed mismatches allowed in the adapter alignment.
+30: Specifies the palindrome clip threshold.
+10: Specifies the simple clip threshold.
+
+- _LEADING:3_: This parameter specifies quality trimming of low-quality bases with a quality score lower than 3.
+
+- _TRAILING:3_:This parameter specifies quality trimming of low-quality bases with a quality score lower than 3.
+
+- _SLIDINGWINDOW:4:15_:This parameter specifies quality trimming using a sliding window approach. It trims bases from the ends of the reads based on a window size of 4 and trims bases if the average quality within the window is below 15.
+
+**3. Genome Indexing**
+
+**3.1 Bowtie2 Index Generation**
+
+A Bowtie2 index for the human reference genome, specifically chromosome 21 (GRCh38), was built using the `bowtie2_build_gencode` rule. Bowtie2 created a output of 6 files (Forward and reverse strands of the Burrows-Wheeler Transform (BWT) of the reference sequence and reverse strands of the BWT of the reverse complement of the reference sequence)
 

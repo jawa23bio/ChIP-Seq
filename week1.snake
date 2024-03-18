@@ -5,7 +5,11 @@ CONDITIONS = set(sample_csv['condition'].tolist())
 REPS = set(sample_csv['replicate'].tolist())
 
 rule all:
-	input:
+	input: 
+		expand('samples/{condition}_{rep}.fastq.gz', condition = CONDITIONS, rep = REPS),
+		expand('results/{condition}_{rep}_fastqc.html', condition = CONDITIONS, rep = REPS),
+		expand('results/{condition}_{rep}.trimmed.fastq.gz',condition = CONDITIONS, rep = REPS),
+		expand('results/Chr21.{ext}.bt2', ext=[1, 2, 3, 4, 'rev.1', 'rev.2'])
 
 rule wget_files:
 	output:
@@ -20,26 +24,45 @@ rule wget_files:
 
 rule bowtie2_build_gencode:
 	input:
+		fastq = 'samples/GRCh38.chr21.fa.gz'
 	output:
+		'results/Chr21.{ext}.bt2'
 	params:
 	threads: 16
 	conda:
 		'envs/bowtie2_env.yml'
 	shell:
+		'''bowtie2-build {input.fastq} results/Chr21'''
 
 rule fastqc:
-	input:
+	input: 
+		fastq = 'samples/{condition}_{rep}.fastq.gz'
 	output:
+		fastqc = 'results/{condition}_{rep}_fastqc.html'
 	params:
+		outdir = 'results/'
 	threads: 4
 	conda:
 		'envs/fastqc_env.yml'
 	shell:
+		'''fastqc {input.fastq} -o {params.outdir}
+		'''
 
 rule trimomatic:
 	input:
+		fastq = 'samples/{condition}_{rep}.fastq.gz',
+		adapters = 'results/TruSeq3-SE.fa'
 	output:
+		trimmed = 'results/{condition}_{rep}.trimmed.fastq.gz'
 	threads: 8
 	conda:
 		'envs/trimmomatic_env.yml'
 	shell:
+		'''trimmomatic SE -threads {threads} \
+            {input.fastq} \
+            {output.trimmed} \
+            ILLUMINACLIP:{input.adapters}:2:30:10 \
+            LEADING:3 \
+            TRAILING:3 \
+            SLIDINGWINDOW:4:15
+			'''
