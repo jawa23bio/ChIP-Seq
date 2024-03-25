@@ -6,8 +6,32 @@ date: '2024-03-01'
 
 Use this notebook to quickly write the methods for the week:
 
+bowtie2_align Rule:
+Sequencing reads from trimmed FASTQ files were aligned to the GRCh38 reference genome using the Bowtie2 aligner. The default output (.sam) file was piped into SAMtools to generate .bam file using samtools view.
 
+samtools_sort Rule:
+Aligned BAM files generated from the previous step were sorted using samtools sort to facilitate downstream analysis.
 
+samtools_idx Rule:
+Sorted BAM files were indexed using samtools index to allow for efficient random access during subsequent analysis.
+
+samtools_flagstats Rule:
+Alignment statistics were generated using samtools flagstat for each aligned BAM file to evaluate mapping efficiency and overall data quality.
+
+multiqc Rule:
+A comprehensive quality control report was generated using MultiQC to aggregate information from all the various analyses done so far. The report encompassed quality metrics and visualizations from bowtie2-align, flagstat, adapter content, etc.,. Each of the individual analysis's quality metrics are present in the multiqc_data folder in results directory.
+
+bamCoverage Rule:
+BigWig files representing read coverage across the genome were generated from sorted BAM files using the bamCoverage tool from DeepTools.
+
+multiBwSummary Rule:
+A summary of the BigWig files representing read coverage across the genome was generated using multiBigwigSummary. This summary facilitated comprehensive comparison across samples.
+
+plotCorrelation Rule:
+Correlation analysis was performed using the plotCorrelation tool from DeepTools to assess the similarity in transcriptional profiles between samples. This analysis generated a correlation heatmap visualizing pairwise correlation coefficients using 'pearsons correlation method' between samples.
+
+![Alt text](projectnb/bf528/students/jawa/samples/correlation_heatmap.png)
+Based on the heatmap generated, we see there's a very high level of correlation between the replicates of RUNX1 and that of INP. However, there isn't a huge correlation relevance between RUNX1 and INP samples.
 
 
 

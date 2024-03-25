@@ -3,13 +3,15 @@ import pandas
 sample_csv = pandas.read_csv('sample_sheet.csv', index_col='name')
 CONDITIONS = set(sample_csv['condition'].tolist())
 REPS = set(sample_csv['replicate'].tolist())
+EXTENSIONS = [1, 2, 3, 4, 'rev.1', 'rev.2']
 
 rule all:
 	input: 
 		expand('samples/{condition}_{rep}.fastq.gz', condition = CONDITIONS, rep = REPS),
 		expand('results/{condition}_{rep}_fastqc.html', condition = CONDITIONS, rep = REPS),
-		expand('results/{condition}_{rep}.trimmed.fastq.gz',condition = CONDITIONS, rep = REPS),
-		expand('results/Chr21.{ext}.bt2', ext=[1, 2, 3, 4, 'rev.1', 'rev.2'])
+		expand('results/{condition}_{rep}_trimmed.fastq',condition = CONDITIONS, rep = REPS),
+		expand('results/GRCh38.{ext}.bt2', ext= EXTENSIONS),
+		'samples/GRCh38.chr21.fa'
 
 rule wget_files:
 	output:
@@ -22,17 +24,31 @@ rule wget_files:
 		wget -O {params.renamed} {params.link} 
 		'''
 
+rule decompress:
+	input:
+		fasta_gz = 'samples/GRCh38.chr21.fa.gz'
+	output:
+		fasta = 'samples/GRCh38.chr21.fa'
+	threads: 2
+	shell:
+		'''
+		gunzip {input.fasta_gz}
+		'''
+
 rule bowtie2_build_gencode:
 	input:
-		fastq = 'samples/GRCh38.chr21.fa.gz'
+		fasta = 'samples/GRCh38.primary_assembly.genome.fa'
 	output:
-		'results/Chr21.{ext}.bt2'
+		expand('results/GRCh38.{ext}.bt2', ext = EXTENSIONS)
 	params:
+		outdir = 'results/GRCh38'
 	threads: 16
 	conda:
 		'envs/bowtie2_env.yml'
 	shell:
-		'''bowtie2-build {input.fastq} results/Chr21'''
+		'''
+		bowtie2-build {input.fasta} {params.outdir}
+		'''
 
 rule fastqc:
 	input: 
@@ -53,7 +69,7 @@ rule trimomatic:
 		fastq = 'samples/{condition}_{rep}.fastq.gz',
 		adapters = 'results/TruSeq3-SE.fa'
 	output:
-		trimmed = 'results/{condition}_{rep}.trimmed.fastq.gz'
+		trimmed = 'results/{condition}_{rep}_trimmed.fastq'
 	threads: 8
 	conda:
 		'envs/trimmomatic_env.yml'
