@@ -1,62 +1,106 @@
+import pandas
+
+sample_csv = pandas.read_csv('full-sample_sheet.csv', index_col='name')
+CONDITIONS = set(sample_csv['condition'].tolist())
+REPS = set(sample_csv['replicate'].tolist())
+
 rule all:
-	input:
+    input:
+        expand('results/tag_dirs/{condition}_{rep}', condition=CONDITIONS, rep=REPS),
+        expand('results/peaks/{condition}_{rep}.peaks.txt', condition=CONDITIONS, rep=REPS),
+        expand('results/peaks/{condition}_{rep}.peaks.bed', condition=CONDITIONS, rep=REPS),
+        'results/reproducible_peaks.bed',
+        'results/filtered_peaks.bed',
+        'results/annotated_peaks.txt',
+        'results/motifs.html'
 
 rule make_tag_dir:
-	input:
-	output:
-	params:
-	conda:
-		'envs/homer_env.yml'
-	shell:
+    input:
+        'results/bams/{condition}_{rep}.sorted.bam'
+    output:
+        directory("results/tag_dirs/{condition}_{rep}")
+    params:
+        genome='results/genome.fa'
+    conda:
+        'envs/homer_env.yml'
+    shell:
+        'makeTagDirectory {input} {output} -genome {params.genome}'
 
 rule findPeaks:
-	input:
-	output:
-	conda:
-		'envs/homer_env.yml'
-	shell:
+    input:
+        tag_dir='results/tag_dirs/{condition}_{rep}'
+    output:
+        'results/peaks/{condition}_{rep}.peaks.txt'
+    conda:
+        'envs/homer_env.yml'
+    shell:
+        'findPeaks {input.tag_dir} -style factor -o {output}'
 
 rule convertPeakFiles:
-	input:
-	output:
-	conda:
-		'envs/homer_env.yml'
-	shell:
+    input:
+        'results/peaks/{condition}_{rep}.peaks.txt'
+    output:
+        'results/peaks/{condition}_{rep}.peaks.bed'
+    conda:
+        'envs/homer_env.yml'
+    shell:
+        'pos2bed.pl {input} > {output}'
 
 rule intersect_peaks:
-	input:
-	output:
-	conda:
-		'envs/bedtools_env.yml'
-	shell:
+    input:
+        peak_files=expand('results/peaks/{condition}_{rep}.peaks.bed', condition=CONDITIONS, rep=REPS)
+    output:
+        'results/reproducible_peaks.bed'
+    conda:
+        'envs/bedtools_env.yml'
+    shell:
+        'bedtools intersect -a {input.peak_files[0]} -b {input.peak_files[1]} | sort -u > {output}'
 
 rule filter_blacklist:
-	input:
-	output:
-	conda:
-		'envs/bedtools_env.yml'
-	shell:
+    input:
+        peaks='results/reproducible_peaks.bed',
+        blacklist='results/hg38-blacklist.v2.bed'
+    output:
+        'results/filtered_peaks.bed'
+    conda:
+        'envs/bedtools_env.yml'
+    shell:
+        'bedtools intersect -v -a {input.peaks} -b {input.blacklist} > {output}'
 
 rule unzip_gtf:
-	input:
-	output:
-	shell:
+    input:
+        'results/gencode.v45.primary_assembly.annotation.gtf.gz'
+    output:
+        'results/gencode.annotation.gtf'
+    shell:
+        'gunzip -c {input} > {output}'
 
 rule annotate_peaks:
-	input:
-	output:
-	conda:
-		'envs/homer_env.yml'
-	shell:
+    input:
+        peaks='results/filtered_peaks.bed',
+        gtf='results/gencode.annotation.gtf'
+    output:
+        'results/annotated_peaks.txt'
+    conda:
+        'envs/homer_env.yml'
+    shell:
+        'annotatePeaks.pl {input.peaks} {params.genome} -gtf {input.gtf} > {output}'
 
 rule unzip_genome:
-	input:
-	output:
-	shell:
+    input:
+        'results/GRCh38.primary_assembly.genome.fa.gz'
+    output:
+        'results/genome.fa'
+    shell:
+        'gunzip -c {input} > {output}'
 
 rule motifs:
-	input:
-	output:
-	conda:
-		'envs/homer_env.yml'
-	shell:
+    input:
+        peaks='results/filtered_peaks.bed',
+        genome='results/genome.fa'
+    output:
+        'results/motifs.html'
+    conda:
+        'envs/homer_env.yml'
+    shell:
+        'findMotifsGenome.pl {input.peaks} {params.genome} -fasta {input.genome} -size 200 -len 8,10,12 -p 8 > {output}'
