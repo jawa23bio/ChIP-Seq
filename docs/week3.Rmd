@@ -6,6 +6,29 @@ date: '2024-03-01'
 
 Use this notebook to quickly write the methods for the week:
 
+Peak Calling
+Tag directories were generated for each of the sorted BAM file using the HOMER suite with the makeTagDirectory utility. 
+Subsequently, peaks were called from each tag directory using the findPeaks function in HOMER, with the style parameter set to factor.
+Since snakemake didn't allow the peak files to be stored in the newly created tag directories (ChildIOException error), the results were saved in the 'results' directory.
+
+Peak Conversion and Intersection
+The peaks identified by HOMER were initially stored in a tab-separated text format. 
+To facilitate downstream analysis, these text files were converted to BED format using the pos2bed.pl script provided by HOMER.
+
+To identify overlapping peaks between samples, the bedtools intersect tool was utilized. 
+Specifically, the peaks from the INP sample's rep1 replicate were intersected with the peaks from both replicates of the RUNX1 sample, resulting in a set of intersected peaks specific to the RUNX1.
+
+Blacklist Filtering
+To remove peaks located within known blacklisted genomic regions, the intersected peaks were further processed using the bedtools intersect tool. 
+The intersection between the peaks and the provided list of blacklisted regions (hg38-blacklist.v2.bed) was computed, and the resulting peaks were filtered to retain only those not overlapping with blacklisted regions.
+
+Peak Annotation
+The filtered peaks were annotated to their nearest genomic features using the annotatePeaks.pl script from the HOMER suite. 
+A comprehensive annotation was performed against the gencode.v45.primary_assembly.annotation.gtf file, providing insights into the functional relevance of the identified peaks.
+
+Motif Analysis
+To uncover potential DNA sequence motifs associated with the identified peaks, motif analysis was conducted using the findMotifsGenome.pl script from HOMER. 
+This analysis searched for enriched sequence motifs within the genomic regions represented by the filtered peaks, providing valuable information about potential transcription factor binding sites and regulatory elements.
 
 
 
