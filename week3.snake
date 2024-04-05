@@ -1,16 +1,12 @@
 CON = ['INP', 'RUNX1']
 REP = ['rep1', 'rep2']
-NUMBER = ['1','2','3','4','rev.1','rev.2']
 
 rule all:
 	input: 
 		expand('results/{condition}_{rep}_HOMER/', condition=CON, rep=REP, directory=True),
-		expand('results/{condition}_{rep}_peaks.txt', condition=CON, rep=REP),
 		expand('results/{condition}_{rep}_peaks.bed', condition=CON, rep=REP),
 		'results/RUNX1_intersect.bed',
 		'results/RUNX1_bf.bed',
-		'results/gencode.v45.primary_assembly.annotation.gtf',
-		'results/GRCh38.primary_assembly.genome.fa',
 		'results/RUNX1_annotated.txt',
 		directory('results/RUNX1_motifs/')
 
