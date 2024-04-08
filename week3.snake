@@ -3,10 +3,6 @@ REP = ['rep1', 'rep2']
 
 rule all:
 	input: 
-		expand('results/{condition}_{rep}_HOMER/', condition=CON, rep=REP, directory=True),
-		expand('results/{condition}_{rep}_peaks.bed', condition=CON, rep=REP),
-		'results/RUNX1_intersect.bed',
-		'results/RUNX1_bf.bed',
 		'results/RUNX1_annotated.txt',
 		directory('results/RUNX1_motifs/')
 
@@ -25,21 +21,22 @@ rule make_tag_dir:
 
 rule findPeaks:
 	input: 
-		'results/{condition}_{rep}_HOMER/'
+		rep1 = 'results/INP_{rep}_HOMER/',
+		rep2 = 'results/RUNX1_{rep}_HOMER/'
 	output:
-		'results/{condition}_{rep}_peaks.txt'
+		'results/{rep}_peaks.txt'
 	conda:
 		'envs/homer_env.yml'
 	shell:
 		'''
-		findPeaks {input} -style factor -o {output}
+		findPeaks {input.rep1} {input.rep2} -style factor -o {output}
 		'''
 
 rule convertPeakFiles:
 	input:
-		'results/{condition}_{rep}_peaks.txt'
+		'results/{rep}_peaks.txt'
 	output:
-		'results/{condition}_{rep}_peaks.bed'
+		'results/{rep}_peaks.bed'
 	conda:
 		'envs/homer_env.yml'
 	shell:
@@ -49,14 +46,15 @@ rule convertPeakFiles:
 
 rule intersect_peaks:
 	input:
-		expand('results/{condition}_{rep}_peaks.bed', condition = CON, rep = REP)
+		peak1 = 'results/rep1_peaks.bed',
+		peak2 = 'results/rep2_peaks.bed'
 	output:
 		'results/RUNX1_intersect.bed'
 	conda:
 		'envs/bedtools_env.yml'
 	shell:
 		'''
-		bedtools intersect -a results/INP_rep1_peaks.bed -b {input} > {output}
+		bedtools intersect -a {input.peak1} -b {input.peak2} > {output}
 		'''
 
 rule filter_blacklist:

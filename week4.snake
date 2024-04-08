@@ -1,18 +1,34 @@
+CON = ['INP', 'RUNX1']
+REP = ['rep1', 'rep2']
+
 rule all:
-	input:
+	input: 
+		expand('results/{condition}_{rep}_Plotprofile.png', condition = CON, rep = REP)
 
 rule computeMatrix:
 	input:
+		bigwig = 'results/{condition}_{rep}.bw',
+		bed = 'results/hg38_genes.bed'
 	output:
+		'results/{condition}_{rep}_matrix.gz'
 	params:
+		window = 2000
 	conda:
 		'envs/deeptools_env.yml'
 	threads: 4
 	shell:
+		'''
+		computeMatrix scale-regions -S {input.bigwig} -R {input.bed} -a {params.window} -b {params.window} --outFileName {output}
+		'''
 
 rule plotMatrix:
 	input:
+		'results/{condition}_{rep}_matrix.gz'
 	output:
+		'results/{condition}_{rep}_Plotprofile.png'
 	conda:
 		'envs/deeptools_env.yml'
 	shell:
+		'''
+		plotProfile -m {input} -o {output}
+		'''

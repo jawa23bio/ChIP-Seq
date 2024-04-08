@@ -6,10 +6,107 @@ date: '2024-03-01'
 
 Use this notebook to quickly write the methods for the week:
 
+Methods: 
+  
+Computing Matrix Profiles: 
 
+The computeMatrix rule was used to compute matrix profiles for the ChIP-seq signal over defined genomic regions. For each condition (INP and RUNX1) and replicate ('rep1' and 'rep2'), a matrix profile was generated using the computeMatrix function from DeepTools. Compute matrix requires a bed file of the hg38 reference genome and a specific subset of the genome was used. Here filters were applied to the bed file to include only the relevant columns. The computeMatrix function scaled the ChIP-seq signal around the defined genomic regions, considering a window size of 2000 base pairs upstream and downstream of each region. The output of this step was a gzipped matrix file containing the computed matrix profiles.
 
+Plotting Matrix Profiles:
 
-
+The plotMatrix rule was applied to generate profile plots from the computed matrix profiles. For each condition and replicate, a profile plot was generated using the plotProfile function from DeepTools. The plotProfile function visualized the ChIP-seq signal enrichment around the defined genomic regions, providing insights into the spatial distribution of RUNX1 binding.
 
 If asked, you may also include any plots or figures in this notebook as well:
+
+
+# Integration with RNAseq results
+
+**How many DE genes do you find? Do they match the numbers reported in the paper?**
+
+By applying the same filters, I observed 1227 genes at first. But upon checking the data, I realised it had some NA values. So upon removing these NA values, I was able to match the same number of upregulated and downregulated genes as mentioned in the paper. 
+
+Upregulated = 687
+Downregulated = 466
+  
+```{r}
+setwd ('/projectnb/bf528/students/jawa/project-2-jawa23bio/results')
+
+data <- read.table("GSE75070_MCF7_shRUNX1_shNS_RNAseq_log2_foldchange.txt", header = TRUE)
+
+# Filter the DE genes based on criteria
+filtered_de_genes <- data[data$padj <= 0.01 & abs(data$log2FoldChange) > 1, ]
+nrow(filtered_de_genes)
+
+significant_de_genes <- na.omit(filtered_de_genes)
+nrow(significant_de_genes)
+
+# Filter upregulated genes (log2 fold change > 1)
+upregulated_genes <- significant_de_genes[significant_de_genes$log2FoldChange > 1, ]
+nrow(upregulated_genes)
+
+# Filter downregulated genes (log2 fold change < -1)
+downregulated_genes <- significant_de_genes[significant_de_genes$log2FoldChange < -1, ]
+nrow(downregulated_genes)
+
+# Load the biomaRt package
+library(biomaRt)
+
+# Connect to the appropriate Ensembl database
+ensembl <- useMart("ensembl", dataset = "hsapiens_gene_ensembl")
+
+# Step 1: Read the peak annotation file and filter peaks within ±5kb of a TSS
+peak_annotation <- read.csv("RUNX1_annotated.txt", header = TRUE, sep = "\t")
+
+# Filter peaks within ±5kb of a TSS
+peaks_near_TSS <- peak_annotation[abs(peak_annotation$`Distance.to.TSS`) <= 5000, ]
+nrow(peaks_near_TSS)
+
+upregulated_gene_names <- upregulated_genes$genename
+downregulated_gene_names <- downregulated_genes$genename
+
+ensembl_gene_ids_upregulated <- getBM(attributes = c("ensembl_gene_id"), filters = "external_gene_name", values = upregulated_gene_names, mart = ensembl)$ensembl_gene_id
+ensembl_gene_ids_downregulated <- getBM(attributes = c("ensembl_gene_id"), filters = "external_gene_name", values = downregulated_gene_names, mart = ensembl)$ensembl_gene_id
+
+# Calculate percentages
+upregulated_peaks_count <- sum(peaks_near_TSS$Gene.Name %in% ensembl_gene_ids_upregulated)
+upregulated_peaks_count  # Since the number of genes here show up as zero, unable to recreate figure 2D and supplementary 2f
+
+downregulated_peaks_count <- sum(peaks_near_TSS$Gene.Name %in% ensembl_gene_ids_downregulated)
+downregulated_peaks_count # Since the number of genes here show up as zero, unable to recreate figure 2D and supplementary 2f
+
+# Since the number of genes here show up as zero, unable to recreate figure 2D and supplementary 2f
+
+# Calculate percentages
+total_upregulated_genes <- nrow(upregulated_genes)
+total_downregulated_genes <- nrow(downregulated_genes)
+
+percentage_upregulated <- (upregulated_peaks_count / total_upregulated_genes) * 100
+percentage_downregulated <- (downregulated_peaks_count / total_downregulated_genes) * 100
+
+print(paste("Percentage of RUNX1 peaks near up-regulated DE genes:", round(percentage_upregulated, 2), "%"))
+print(paste("Percentage of RUNX1 peaks near down-regulated DE genes:", round(percentage_downregulated, 2), "%"))
+
+```
+
+# Visualizing peaks using a genome browser
+
+**Do you see the same general results as in figures 2d and 2e?**
+
+Yes, I see a similar pattern observed in my results.
+  
+**Do you agree with the conclusions made by the authors in these figures?**
+  
+Yes, we cam see enriched binding of RUNX1 at the MALAT1 promoter region. But the region following it shows little to no peaks indicating a downregulation. Fig 2E also shows a similar view for the NEAT1 lncRNA gene locus with high peak regions at the promoter region and reduced NEAT1 expression in the region following the promoter. These data support the author's statement that "A direct transcriptional role of RUNX1 in the expression of these lncRNAs that are important for nuclear organization and cancer progression is suggested by RUNX1 binding at their promoter regions."
+
+The figures provide evidence that RUNX1 binds at the promoters of MALAT1 and NEAT1, and that depletion of RUNX1 leads to downregulation of these lncRNA genes, consistent with a direct transcriptional regulatory role for RUNX1 in controlling their expression.
+
+**Please take screenshots of the MALAT1 and NEAT1 promoter regions displaying the signal coverage found in your bigWig files and the peak locations from your BED file of reproducible peaks.**
+
+The regions from gtf file did not show up in any of the zoom panes.
+
+![MALAT1](/projectnb/bf528/students/jawa/project-2-jawa23bio/results/MALAT1.png)
+
+![NEAT1](/projectnb/bf528/students/jawa/project-2-jawa23bio/results/NEAT1.png)
+
+![Reproducible peaks](/projectnb/bf528/students/jawa/project-2-jawa23bio/results/Reproducible peak regions.png)
 
