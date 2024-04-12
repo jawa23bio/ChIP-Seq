@@ -29,6 +29,8 @@ Upregulated = 687
 Downregulated = 466
   
 ```{r}
+library(ggplot2)
+library(dplyr)
 setwd ('/projectnb/bf528/students/jawa/project-2-jawa23bio/results')
 
 data <- read.table("GSE75070_MCF7_shRUNX1_shNS_RNAseq_log2_foldchange.txt", header = TRUE)
@@ -48,43 +50,55 @@ nrow(upregulated_genes)
 downregulated_genes <- significant_de_genes[significant_de_genes$log2FoldChange < -1, ]
 nrow(downregulated_genes)
 
-# Load the biomaRt package
-library(biomaRt)
-
-# Connect to the appropriate Ensembl database
-ensembl <- useMart("ensembl", dataset = "hsapiens_gene_ensembl")
-
 # Step 1: Read the peak annotation file and filter peaks within ±5kb of a TSS
 peak_annotation <- read.csv("RUNX1_annotated.txt", header = TRUE, sep = "\t")
 
-# Filter peaks within ±5kb of a TSS
-peaks_near_TSS <- peak_annotation[abs(peak_annotation$`Distance.to.TSS`) <= 5000, ]
-nrow(peaks_near_TSS)
+# Define a function to generate plots for different Distance.to.TSS values
+generate_plot <- function(distance_to_TSS) {
+  # Filter peaks within specified distance of TSS
+  peaks_near_TSS <- peak_annotation[abs(peak_annotation$Distance.to.TSS) <= distance_to_TSS, ]
 
-upregulated_gene_names <- upregulated_genes$genename
-downregulated_gene_names <- downregulated_genes$genename
+  # Calculate percentages
+  upregulated_peaks_count <- sum(upregulated_genes$genename %in% peaks_near_TSS$Gene.Name)
+  downregulated_peaks_count <- sum(downregulated_genes$genename %in% peaks_near_TSS$Gene.Name)
+  total_upregulated_genes <- nrow(upregulated_genes)
+  total_downregulated_genes <- nrow(downregulated_genes)
+  percentage_upregulated_peak <- (upregulated_peaks_count / total_upregulated_genes) * 100
+  percentage_downregulated_peak <- (downregulated_peaks_count / total_downregulated_genes) * 100
+  percentage_remaining <- 100 - percentage_upregulated_peak
+  percentage_remaining_down <- 100 - percentage_downregulated_peak
 
-ensembl_gene_ids_upregulated <- getBM(attributes = c("ensembl_gene_id"), filters = "external_gene_name", values = upregulated_gene_names, mart = ensembl)$ensembl_gene_id
-ensembl_gene_ids_downregulated <- getBM(attributes = c("ensembl_gene_id"), filters = "external_gene_name", values = downregulated_gene_names, mart = ensembl)$ensembl_gene_id
+  # Create data frames for plotting
+  data <- data.frame(Category = c("Upregulated"),
+                     Type = c("RUNX1 Bound", "Not Bound"),
+                     Percentage = c(percentage_upregulated_peak, percentage_remaining),
+                     Count = c(upregulated_peaks_count, total_upregulated_genes - upregulated_peaks_count))
+  data2 <- data.frame(Category = c("Downregulated"),
+                      Type = c("RUNX1 Bound", "Not Bound"),
+                      Percentage = c(percentage_downregulated_peak, percentage_remaining_down),
+                      Count = c(downregulated_peaks_count, total_downregulated_genes - downregulated_peaks_count))
 
-# Calculate percentages
-upregulated_peaks_count <- sum(peaks_near_TSS$Gene.Name %in% ensembl_gene_ids_upregulated)
-upregulated_peaks_count  # Since the number of genes here show up as zero, unable to recreate figure 2D and supplementary 2f
+  # Combine data frames
+  combined_data <- bind_rows(data, data2)
 
-downregulated_peaks_count <- sum(peaks_near_TSS$Gene.Name %in% ensembl_gene_ids_downregulated)
-downregulated_peaks_count # Since the number of genes here show up as zero, unable to recreate figure 2D and supplementary 2f
+  # Plot histogram
+  ggplot(combined_data, aes(x = Category, y = Percentage, fill = Type)) +
+    geom_bar(stat = "identity", position = "stack", width = 0.7) +
+    geom_text(aes(label = Count), position = position_stack(vjust = 0.5)) +
+    labs(x = paste("+/-", distance_to_TSS, "kb"), y = "Percentage", fill = "Type") +
+    ggtitle(paste("Percentage of Upregulated and Downregulated Genes with Peaks (", distance_to_TSS, "kb)")) +
+    theme_minimal()
+}
 
-# Since the number of genes here show up as zero, unable to recreate figure 2D and supplementary 2f
+# Generate plots for different Distance.to.TSS values
+plot_5000 <- generate_plot(5000)
+plot_10000 <- generate_plot(10000)
+plot_20000 <- generate_plot(20000)
 
-# Calculate percentages
-total_upregulated_genes <- nrow(upregulated_genes)
-total_downregulated_genes <- nrow(downregulated_genes)
-
-percentage_upregulated <- (upregulated_peaks_count / total_upregulated_genes) * 100
-percentage_downregulated <- (downregulated_peaks_count / total_downregulated_genes) * 100
-
-print(paste("Percentage of RUNX1 peaks near up-regulated DE genes:", round(percentage_upregulated, 2), "%"))
-print(paste("Percentage of RUNX1 peaks near down-regulated DE genes:", round(percentage_downregulated, 2), "%"))
+# Print plots
+print(plot_5000)
+print(plot_10000)
+print(plot_20000)
 
 ```
 

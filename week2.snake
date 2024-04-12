@@ -4,13 +4,8 @@ NUMBER = ['1','2','3','4','rev.1','rev.2']
 
 rule all:
 	input:
-		expand('results/{condition}_{rep}.bam', condition = CON, rep = REP),
-		expand('results/{condition}_{rep}.sorted.bam', condition = CON, rep = REP),
 		expand('results/{condition}_{rep}.sorted.bam.bai', condition = CON, rep = REP),
-		expand('results/{condition}_{rep}.txt', condition = CON, rep = REP),
 		'results/multiqc_report.html',
-		expand('results/{condition}_{rep}.bw', condition = CON, rep = REP),
-		'results/multiBwSummary.npz',
 		'correlation_heatmap.png'
 
 rule bowtie2_align:
@@ -65,6 +60,8 @@ rule samtools_flagstats:
 		'''
 
 rule multiqc:
+	input:
+		expand('results/{condition}_{rep}.txt', condition = CON, rep = REP)
 	output:
 		multiqc = 'results/multiqc_report.html'
 	params:
@@ -73,7 +70,7 @@ rule multiqc:
 		'envs/multiqc_env.yml'
 	shell:
 		'''
-		multiqc --outdir {params.results} . 
+		multiqc {input} --outdir {params.results} . 
 		'''
 
 rule bamCoverage:
@@ -111,5 +108,5 @@ rule plotCorrelation:
 		'envs/deeptools_env.yml'
 	shell:
 		'''
-		plotCorrelation -in {input.summary} -c pearson -p heatmap -o {output.heatmap}
+		plotCorrelation -in {input.summary} -c pearson -p heatmap -o {output.heatmap} --plotNumbers
 		'''

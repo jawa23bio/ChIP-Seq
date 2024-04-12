@@ -1,16 +1,15 @@
-CON = ['INP', 'RUNX1']
 REP = ['rep1', 'rep2']
 
 rule all:
 	input: 
-		expand('results/{condition}_{rep}_Plotprofile.png', condition = CON, rep = REP)
+		expand('results/RUNX1_{rep}_Plotprofile.png', rep = REP)
 
 rule computeMatrix:
 	input:
-		bigwig = 'results/{condition}_{rep}.bw',
-		bed = 'results/hg38_genes.bed'
+		bigwig = 'results/RUNX1_{rep}.bw',
+		bed = 'results/hg38_genes_all.bed'
 	output:
-		'results/{condition}_{rep}_matrix.gz'
+		'results/RUNX1_{rep}_matrix.gz'
 	params:
 		window = 2000
 	conda:
@@ -23,9 +22,9 @@ rule computeMatrix:
 
 rule plotMatrix:
 	input:
-		'results/{condition}_{rep}_matrix.gz'
+		'results/RUNX1_{rep}_matrix.gz'
 	output:
-		'results/{condition}_{rep}_Plotprofile.png'
+		'results/RUNX1_{rep}_Plotprofile.png'
 	conda:
 		'envs/deeptools_env.yml'
 	shell:

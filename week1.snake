@@ -7,8 +7,6 @@ EXTENSIONS = [1, 2, 3, 4, 'rev.1', 'rev.2']
 
 rule all:
 	input: 
-		expand('samples/{condition}_{rep}.fastq.gz', condition = CONDITIONS, rep = REPS),
-		expand('results/{condition}_{rep}_fastqc.html', condition = CONDITIONS, rep = REPS),
 		expand('results/{condition}_{rep}_trimmed.fastq',condition = CONDITIONS, rep = REPS),
 		expand('results/GRCh38.{ext}.bt2', ext= EXTENSIONS),
 		'samples/GRCh38.chr21.fa'

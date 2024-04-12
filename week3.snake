@@ -21,15 +21,15 @@ rule make_tag_dir:
 
 rule findPeaks:
 	input: 
-		rep1 = 'results/INP_{rep}_HOMER/',
-		rep2 = 'results/RUNX1_{rep}_HOMER/'
+		INP = 'results/INP_{rep}_HOMER/',
+		RUNX1 = 'results/RUNX1_{rep}_HOMER/'
 	output:
 		'results/{rep}_peaks.txt'
 	conda:
 		'envs/homer_env.yml'
 	shell:
 		'''
-		findPeaks {input.rep1} {input.rep2} -style factor -o {output}
+		findPeaks {input.RUNX1} -i {input.INP} -style factor -o {output}
 		'''
 
 rule convertPeakFiles:
@@ -113,5 +113,5 @@ rule motifs:
 		'envs/homer_env.yml'
 	shell:
 		'''
-		findMotifsGenome.pl {input.bf} {input.fasta} {output}
+		findMotifsGenome.pl {input.bf} {input.fasta} {output} -size 200
 		'''
